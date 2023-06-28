@@ -17,7 +17,7 @@ def generateJobSize():
 
 # fcn that generates an interarrival time
 def generateInterarrivalTime():
-    return np.random.exponential(10 / 3)
+    return np.random.exponential(10 / 5)
 
 
 # fcn that handles an arrival event
@@ -118,6 +118,6 @@ print(len(runCompletions))
 print(sum(jobSizes) / len(jobSizes))
 
 
-with open("SRPT_LOAD_0.3.txt", "w") as fp:
+with open("SRPT_LOAD_0.5.txt", "w") as fp:
     for item in runCompletions:
         fp.write("%s\n" % item)
