@@ -72,7 +72,8 @@ def handleDep():
     # set the departure time of the job that is currently departing
     servingJob.departureTime = clock + servingJob.rpt
     # append the total time spent in the system
-    completionTimes.append(servingJob.departureTime - servingJob.arrivalTime)
+    if check == True:
+        runCompletions.append(servingJob.departureTime - servingJob.arrivalTime)
     # these last 2 set up the next departure based on the status of the job queue
     # if the jobQueue is not empty, pop the next job off the queue
     if len(jobQueue) != 0:
@@ -100,6 +101,7 @@ for i in range(runs):
     jobQueue = []
     completionTimes = []
     jobSizes = []
+    check = False
 
     serverEmpty = True
 
@@ -113,11 +115,10 @@ for i in range(runs):
         else:
             clock = nextDepTime
             handleDep()
-    runCompletions.append(completionTimes.pop())
+            if departures == maxDepartures:
+                check = True
     seed += 1
-print(len(runCompletions))
 
-# print(sum(completionTimes) / len(completionTimes))
 print(sum(jobSizes) / len(jobSizes))
 
 

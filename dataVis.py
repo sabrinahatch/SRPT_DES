@@ -27,5 +27,10 @@ for i, load in enumerate(loads):
 plt.plot(x, y)
 plt.xlabel('Load')
 plt.ylabel('Average Completion Time')
-plt.title('SRPT Load vs. Average Completion Time')
+plt.title('FCFS Load vs. Average Completion Time')
+
+# Set the y-axis limits
+plt.ylim(1, 10)
+
 plt.show()
+
