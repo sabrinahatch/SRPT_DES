@@ -1,4 +1,7 @@
 import numpy as np
+# compare the average completion time between SRPT and FCFS for a load of 0.7
+# do a couple of examples for SRPT (give a specific arrival time and size)
+# do pseudocode for PS
 
 
 # class to create job objects
@@ -17,7 +20,7 @@ def generateJobSize():
 
 # fcn that generates an interarrival time
 def generateInterarrivalTime():
-    return np.random.exponential(10 / 5)
+    return np.random.exponential(10 / 7)
 
 
 # fcn that handles an arrival event
@@ -118,6 +121,6 @@ print(len(runCompletions))
 print(sum(jobSizes) / len(jobSizes))
 
 
-with open("SRPT_LOAD_0.5.txt", "w") as fp:
+with open("SRPT_LOAD_0.7.txt", "w") as fp:
     for item in runCompletions:
         fp.write("%s\n" % item)
