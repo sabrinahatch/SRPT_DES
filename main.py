@@ -1,10 +1,7 @@
 import numpy as np
-# compare the average completion time between SRPT and FCFS for a load of 0.7
-# do a couple of examples for SRPT (give a specific arrival time and size)
-# do pseudocode for PS
+import bisect
 
-
-# class to create job objects
+# Class to create job objects
 class Job:
     def __init__(self, arrivalTime, size, rpt):
         self.arrivalTime = arrivalTime
@@ -12,87 +9,88 @@ class Job:
         self.departureTime = None
         self.rpt = rpt
 
-
-# fcn to generate job sizes
+# Function to generate job sizes
 def generateJobSize():
     return np.random.exponential(1)
 
-
-# fcn that generates an interarrival time
+# Function that generates an interarrival time
 def generateInterarrivalTime():
-    return np.random.exponential(10 / 7)
+    return np.random.exponential(10 / 4)
 
-
-# fcn that handles an arrival event
+# Function that handles an arrival event
 def handleArr():
     global clock, serverEmpty, servingJob, nextArrTime, nextDepTime, completionTimes, jobSizes
-    # create the size of the job that just arrived
+
+    # Create the size of the job that just arrived
     size = generateJobSize()
-    # create a new job object with these new attributes
+
+    # Create a new job object with these new attributes
     job = Job(arrivalTime=clock, size=size, rpt=size)
     jobSizes.append(size)
-    # if the server is empty, immediately start servicing the new arrival
+
+    # Update the preempted job's rpt to be the preempted departure time - the new job's arrival time
+    if servingJob != None and servingJob.departureTime != float('inf') and servingJob.departureTime != None:
+        servingJob.rpt = (servingJob.departureTime - clock)
+
+    # If the server is empty, immediately start servicing the new arrival
     if serverEmpty:
+        # Immediately start servicing new job
         servingJob = job
-        # set this as the next departure time
+        # Set this as the next departure time
         nextDepTime = clock + servingJob.size
+        servingJob.departureTime = nextDepTime
         serverEmpty = False
-    # if the new arrival has a larger size than the rpt of the job being servived, add it to the job queue and sort your list
-    elif job.size > servingJob.rpt:
-        # otherwise, append to the job queue
-        jobQueue.append(job)
-        jobQueue.sort(key=lambda x: x.rpt)
-        serverEmpty = False
-
-
-    # if the new arrival is smaller than the rpt of the job currently being serviced
-    # change the departure time of servingJob, put that job back on the queue, and set the new servingJob to the job that just arrived
+    # If the new arrival has a larger size than the rpt of the job being serviced,
+    # add it to the job queue and sort the list
+    elif job.size >= servingJob.rpt:
+        # Otherwise, append to the job queue
+        index = bisect.bisect_right([j.rpt for j in jobQueue], job.rpt)
+        jobQueue.insert(index, job)
+    # If the new arrival is smaller than the rpt of the job currently being serviced,
+    # change the departure time of servingJob, put that job back on the queue,
+    # and set the new servingJob to the job that just arrived
     elif job.size < servingJob.rpt:
-        # set place holder for prempted job's rpt
+        # Set placeholder for preempted job's rpt
         servingJob.departureTime = float("inf")
-        # update the prempted job's rpt to be the prempted deptime - the new job's arrival time
-        servingJob.rpt = (servingJob.departureTime - job.arrivalTime)
         jobQueue.append(servingJob)
-        # update which job is being serviced
+        # Update which job is being serviced
         servingJob = job
-        serverEmpty = False
         nextDepTime = clock + servingJob.size
 
-    # generate next arrival
-    interArrTime = generateInterarrivalTime()
-    nextArrTime = clock + interArrTime
+    # Generate next arrival
+    nextArrTime = clock + generateInterarrivalTime()
 
-
-# fcn that handles a departure event
+# Function that handles a departure event
 def handleDep():
     global clock, departures, serverEmpty, servingJob, nextDepTime, completionTimes
-    # this sections deals with departing the current job
-    # inc the counter
+
+    # This section deals with departing the current job
+    # Increment the counter
+    servingJob.departureTime = clock
     departures += 1
-    # set the departure time of the job that is currently departing
-    servingJob.departureTime = clock + servingJob.rpt
-    # append the total time spent in the system
-    if check == True:
-        runCompletions.append(servingJob.departureTime - servingJob.arrivalTime)
-    # these last 2 set up the next departure based on the status of the job queue
-    # if the jobQueue is not empty, pop the next job off the queue
+
+    # Append the total time spent in the system
+    if departures == maxDepartures:
+        completionTimes.append(servingJob.departureTime - servingJob.arrivalTime)
+
+    # These last two set up the next departure based on the status of the job queue
+    # If the jobQueue is not empty, pop the next job off the queue
     if len(jobQueue) != 0:
         servingJob = jobQueue.pop()
-        # set the next departure time of the job you just popped off the queue
+        # Set the next departure time of the job you just popped off the queue
         nextDepTime = clock + servingJob.rpt
     else:
-        # if the server is empty, we are done with departures
+        # If the server is empty, we are done with departures
         serverEmpty = True
         nextDepTime = float("inf")
         servingJob = None
 
-
-# the following lines of code run the logic of the sim
+# The following lines of code run the logic of the simulation
 seed = 0
-maxDepartures = 5000
+maxDepartures = 20000
 runCompletions = []
 
-runs = 20000
+runs = 5000
 for i in range(runs):
     np.random.seed(seed)
 
@@ -101,10 +99,8 @@ for i in range(runs):
     jobQueue = []
     completionTimes = []
     jobSizes = []
-    check = False
-
+    servingJob = None
     serverEmpty = True
-
     nextArrTime = generateInterarrivalTime()
     clock = 0.0
 
@@ -115,13 +111,15 @@ for i in range(runs):
         else:
             clock = nextDepTime
             handleDep()
-            if departures == maxDepartures:
-                check = True
+
+    if len(completionTimes) > 0:
+        runCompletions.append(completionTimes[-1])  # Append the completion time of the last job to the list
+
     seed += 1
 
-print(sum(jobSizes) / len(jobSizes))
+print("Average job size:", sum(jobSizes) / len(jobSizes))
+print("Number of data points:", len(runCompletions))
 
-
-with open("SRPT_LOAD_0.7.txt", "w") as fp:
+with open("SRPT_LOAD_0.4.txt", "w") as fp:
     for item in runCompletions:
         fp.write("%s\n" % item)
