@@ -1,5 +1,6 @@
 import numpy as np
 import bisect
+import sys
 
 # Class to create job objects
 class Job:
@@ -15,7 +16,7 @@ def generateJobSize():
 
 # Function that generates an interarrival time
 def generateInterarrivalTime():
-    return np.random.exponential(10 / 4)
+    return np.random.exponential(10 / 6)
 
 # Function that handles an arrival event
 def handleArr():
@@ -28,10 +29,9 @@ def handleArr():
     job = Job(arrivalTime=clock, size=size, rpt=size)
     jobSizes.append(size)
 
-    # Update the preempted job's rpt to be the preempted departure time - the new job's arrival time
-    if servingJob != None and servingJob.departureTime != float('inf') and servingJob.departureTime != None:
-        servingJob.rpt = (servingJob.departureTime - clock)
-
+    # # Update the preempted job's rpt to be the preempted departure time - the new job's arrival time
+    # if servingJob != None and servingJob.departureTime != float('inf') and servingJob.departureTime != None:
+    #     servingJob.rpt = (servingJob.departureTime - clock)
     # If the server is empty, immediately start servicing the new arrival
     if serverEmpty:
         # Immediately start servicing new job
@@ -42,20 +42,39 @@ def handleArr():
         serverEmpty = False
     # If the new arrival has a larger size than the rpt of the job being serviced,
     # add it to the job queue and sort the list
-    elif job.size >= servingJob.rpt:
-        # Otherwise, append to the job queue
-        index = bisect.bisect_right([j.rpt for j in jobQueue], job.rpt)
-        jobQueue.insert(index, job)
-    # If the new arrival is smaller than the rpt of the job currently being serviced,
-    # change the departure time of servingJob, put that job back on the queue,
-    # and set the new servingJob to the job that just arrived
-    elif job.size < servingJob.rpt:
-        # Set placeholder for preempted job's rpt
-        servingJob.departureTime = float("inf")
-        jobQueue.append(servingJob)
-        # Update which job is being serviced
-        servingJob = job
-        nextDepTime = clock + servingJob.size
+    else:
+        serverEmpty = False
+        servingJob.rpt = (servingJob.departureTime - clock)
+        if job.size >= servingJob.rpt:
+            # Check increasing or decreasing order
+            jobQueue.append(job)
+            jobQueue.sort(key=lambda x: x.rpt)
+
+        else:
+            # Set placeholder for preempted job's rpt
+            servingJob.departureTime = float("inf")
+            jobQueue.append(servingJob)
+            jobQueue.sort(key=lambda x: x.rpt)
+
+            # Update which job is being serviced
+            servingJob = job
+            nextDepTime = clock + servingJob.size
+            servingJob.departureTime = nextDepTime
+
+
+    # # elif job.size >= servingJob.rpt: # if
+    #     # Otherwise, append to the job queue
+    #     bisect.insort(jobQueue, job.rpt)
+    # # If the new arrival is smaller than the rpt of the job currently being serviced,
+    # # change the departure time of servingJob, put that job back on the queue,
+    # # and set the new servingJob to the job that just arrived
+    # elif job.size < servingJob.rpt: #else
+    #     # Set placeholder for preempted job's rpt
+    #     servingJob.departureTime = float("inf")
+    #     jobQueue.append(servingJob)
+    #     # Update which job is being serviced
+    #     servingJob = job
+    #     nextDepTime = clock + servingJob.size
 
     # Generate next arrival
     nextArrTime = clock + generateInterarrivalTime()
@@ -79,6 +98,7 @@ def handleDep():
         servingJob = jobQueue.pop()
         # Set the next departure time of the job you just popped off the queue
         nextDepTime = clock + servingJob.rpt
+        servingJob.departureTime = nextDepTime
     else:
         # If the server is empty, we are done with departures
         serverEmpty = True
@@ -89,9 +109,11 @@ def handleDep():
 seed = 0
 maxDepartures = 20000
 runCompletions = []
-
+count = 0
 runs = 5000
 for i in range(runs):
+    count += 1
+    print("this is run " + str(count))
     np.random.seed(seed)
 
     departures = 0
@@ -105,6 +127,7 @@ for i in range(runs):
     clock = 0.0
 
     while departures <= maxDepartures:
+
         if nextArrTime <= nextDepTime:
             clock = nextArrTime
             handleArr()
@@ -118,8 +141,11 @@ for i in range(runs):
     seed += 1
 
 print("Average job size:", sum(jobSizes) / len(jobSizes))
-print("Number of data points:", len(runCompletions))
+print("Average completion time:", sum(completionTimes) / len(completionTimes))
 
-with open("SRPT_LOAD_0.4.txt", "w") as fp:
+
+
+with open("SRPT_LOAD_0.6.txt", "w") as fp:
     for item in runCompletions:
         fp.write("%s\n" % item)
+
