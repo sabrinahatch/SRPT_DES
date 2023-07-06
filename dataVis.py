@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-loads = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+loads = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 x = np.zeros(len(loads))
 y = np.zeros(len(loads))
@@ -31,6 +31,7 @@ plt.xlabel('Load')
 plt.ylabel('Average Completion Time')
 plt.title('SRPT Load vs. Average Completion Time')
 
-plt.ylim(1, 6)
-plt.show()
+plt.ylim(0, 10)  # Set the y-axis limits from 0 to 20
+plt.yticks(np.arange(0, 12, 2))  # Set the y-axis tick locations and labels from 0 to 20 with an increment of 2
 
+plt.show()

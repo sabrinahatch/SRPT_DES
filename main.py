@@ -16,7 +16,7 @@ def generateJobSize():
 
 # Function that generates an interarrival time
 def generateInterarrivalTime():
-    return np.random.exponential(10 / 6)
+    return np.random.exponential(10 / 9)
 
 # Function that handles an arrival event
 def handleArr():
@@ -145,7 +145,7 @@ print("Average completion time:", sum(completionTimes) / len(completionTimes))
 
 
 
-with open("SRPT_LOAD_0.6.txt", "w") as fp:
+with open("SRPT_LOAD_0.9.txt", "w") as fp:
     for item in runCompletions:
         fp.write("%s\n" % item)
 
